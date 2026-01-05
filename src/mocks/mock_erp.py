@@ -301,6 +301,14 @@ class MockERP:
             fetched_at=now,
         )
 
+        # Materials lookup - mapping material IDs to names
+        self.materials_lookup: dict[str, str] = {
+            "MAT-001": "Steel Component",
+            "MAT-002": "Plastic Housing",
+            "MAT-003": "Electronic Circuit Board",
+            "MAT-004": "Rubber Gasket",
+        }
+
         # BOM data - mapping products to materials
         self.bom_items: List[BOMItem] = [
             BOMItem(

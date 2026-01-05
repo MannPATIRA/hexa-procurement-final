@@ -24,4 +24,8 @@ class MockERPDataFetcher(ERPDataFetcherInterface):
         return mock_erp.bom_data
     
     def fetch_blanket_pos(self) -> BlanketPOs:
-        return mock_erp.blanket_pos_data 
+        return mock_erp.blanket_pos_data
+    
+    def get_materials_lookup(self) -> dict[str, str]:
+        """Get materials lookup mapping material_id to material_name."""
+        return mock_erp.materials_lookup 
