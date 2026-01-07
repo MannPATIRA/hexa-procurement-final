@@ -7,5 +7,5 @@ from models.inventory_data import InventoryData
 
 class OrderSchedulerInterface(ABC):
     @abstractmethod
-    def schedule_orders(self, inventory_data: InventoryData, materials_forecast: MaterialsForecast, supplier_state_store: SupplierStateStore, guardrails: GuardrailStore) -> OrderSchedule:
+    def schedule_orders(self, inventory_data: InventoryData, materials_forecast: MaterialsForecast, supplier_state_store: SupplierStateStore, guardrails: GuardrailStore, num_days: int) -> OrderSchedule:
         pass
