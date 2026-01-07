@@ -28,13 +28,11 @@ def test_fetch_delivery_history_returns_delivery_history():
     result = fetcher.fetch_delivery_history()
     assert isinstance(result, DeliveryHistory)
 
-
 def test_fetch_delivery_history_has_records():
     """Test that returned delivery history contains records."""
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_delivery_history()
     assert len(result.records) > 0
-
 
 def test_fetch_sales_data_returns_sales_data():
     """Test that fetch_sales_data returns a SalesData instance."""
@@ -55,7 +53,6 @@ def test_fetch_bom_data_returns_bom_data():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_bom_data()
     assert isinstance(result, BOMData)
-
 
 def test_fetch_bom_data_has_items():
     """Test that returned BOM data contains items."""

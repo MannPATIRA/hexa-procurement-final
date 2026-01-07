@@ -7,10 +7,10 @@ from typing import Dict, List, Optional
 
 @dataclass(frozen=True)
 class Guardrail:
-    """Represents guardrail thresholds for a single SKU/product."""
+    """Represents guardrail thresholds for a single material."""
 
-    product_id: str
-    product_name: str
+    material_id: str
+    material_name: str
     reorder_point: int
     safety_stock: int
     maximum_stock: int
@@ -23,7 +23,7 @@ class Guardrail:
 
 @dataclass(frozen=True)
 class GuardrailStore:
-    """Represents guardrail data for all SKUs."""
+    """Represents guardrail data for all materials."""
 
     items: List[Guardrail]
     calculated_at: datetime
