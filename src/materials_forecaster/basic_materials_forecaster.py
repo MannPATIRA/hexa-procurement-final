@@ -26,10 +26,8 @@ class BasicMaterialsForecaster(MaterialsForecasterInterface):
         """
         now = datetime.now()
         
-        # Create a mapping of product_id -> list of BOM items
-        bom_by_product: dict[str, list] = defaultdict(list)
-        for bom_item in bom_data.items:
-            bom_by_product[bom_item.product_id].append(bom_item)
+        # Use items_by_product index from BOM data
+        bom_by_product = bom_data.items_by_product
         
         # Aggregate material requirements
         # Key: material_id, Value: total_quantity, confidence_sum, confidence_count

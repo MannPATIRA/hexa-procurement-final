@@ -1,8 +1,10 @@
 """Sales data model (time series)."""
 
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
+
 
 @dataclass(frozen=True)
 class SalesRecord:
@@ -34,3 +36,11 @@ class SalesData:
     start_date: datetime
     end_date: datetime
     fetched_at: datetime
+    records_by_product: Dict[str, List[SalesRecord]] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Build index by product_id."""
+        index: Dict[str, List[SalesRecord]] = defaultdict(list)
+        for record in self.records:
+            index[record.product_id].append(record)
+        object.__setattr__(self, 'records_by_product', dict(index))

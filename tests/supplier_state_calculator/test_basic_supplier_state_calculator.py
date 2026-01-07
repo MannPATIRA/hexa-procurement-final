@@ -167,11 +167,9 @@ def test_calculate_supplier_state_has_correct_values_from_mock_data():
     
     result = calculator.calculate_supplier_state(delivery_history, approved_suppliers, blanket_pos)
     
-    # Find states by supplier-product combination
-    states_by_key = {(s.supplier_id, s.product_id): s for s in result.states}
-    
+    # Use states_by_key index for direct lookup
     # Test SUP-001, PROD-001
-    state_001 = states_by_key.get(("SUP-001", "PROD-001"))
+    state_001 = result.states_by_key.get(("SUP-001", "PROD-001"))
     assert state_001 is not None, "Should have state for SUP-001, PROD-001"
     assert state_001.total_deliveries == 1
     assert state_001.successful_deliveries == 1
@@ -183,7 +181,7 @@ def test_calculate_supplier_state_has_correct_values_from_mock_data():
     assert state_001.product_name == "Widget A"
     
     # Test SUP-002, PROD-002
-    state_002 = states_by_key.get(("SUP-002", "PROD-002"))
+    state_002 = result.states_by_key.get(("SUP-002", "PROD-002"))
     assert state_002 is not None, "Should have state for SUP-002, PROD-002"
     assert state_002.total_deliveries == 1
     assert state_002.successful_deliveries == 1
@@ -195,7 +193,7 @@ def test_calculate_supplier_state_has_correct_values_from_mock_data():
     assert state_002.product_name == "Widget B"
     
     # Test SUP-003, PROD-003
-    state_003 = states_by_key.get(("SUP-003", "PROD-003"))
+    state_003 = result.states_by_key.get(("SUP-003", "PROD-003"))
     assert state_003 is not None, "Should have state for SUP-003, PROD-003"
     assert state_003.total_deliveries == 1
     assert state_003.successful_deliveries == 1
@@ -207,7 +205,7 @@ def test_calculate_supplier_state_has_correct_values_from_mock_data():
     assert state_003.product_name == "Widget C"
     
     # Test SUP-001, PROD-004
-    state_004 = states_by_key.get(("SUP-001", "PROD-004"))
+    state_004 = result.states_by_key.get(("SUP-001", "PROD-004"))
     assert state_004 is not None, "Should have state for SUP-001, PROD-004"
     assert state_004.total_deliveries == 1
     assert state_004.successful_deliveries == 1

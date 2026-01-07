@@ -1,9 +1,9 @@
 """Delivery history data model."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class DeliveryStatus(str, Enum):
@@ -39,6 +39,9 @@ class DeliveryHistory:
 
     records: List[DeliveryRecord]
     fetched_at: datetime
+    records_by_id: Dict[str, DeliveryRecord] = field(default_factory=dict, init=False, repr=False)
 
-
-
+    def __post_init__(self) -> None:
+        """Build index."""
+        index = {record.delivery_id: record for record in self.records}
+        object.__setattr__(self, 'records_by_id', index)

@@ -48,27 +48,26 @@ def test_fetch_blanket_pos_supplier_mapping():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_blanket_pos()
     
-    bpo_map = {bpo.blanket_po_id: bpo for bpo in result.blanket_pos}
-    
+    # Use blanket_pos_by_id index for direct lookup
     # BPO-001: SUP-001 (Acme Corp) for PROD-001
-    assert bpo_map["BPO-001"].supplier_id == "SUP-001"
-    assert bpo_map["BPO-001"].supplier_name == "Acme Corp"
-    assert bpo_map["BPO-001"].product_id == "PROD-001"
+    assert result.blanket_pos_by_id["BPO-001"].supplier_id == "SUP-001"
+    assert result.blanket_pos_by_id["BPO-001"].supplier_name == "Acme Corp"
+    assert result.blanket_pos_by_id["BPO-001"].product_id == "PROD-001"
     
     # BPO-002: SUP-002 (Tech Supplies Inc) for PROD-002
-    assert bpo_map["BPO-002"].supplier_id == "SUP-002"
-    assert bpo_map["BPO-002"].supplier_name == "Tech Supplies Inc"
-    assert bpo_map["BPO-002"].product_id == "PROD-002"
+    assert result.blanket_pos_by_id["BPO-002"].supplier_id == "SUP-002"
+    assert result.blanket_pos_by_id["BPO-002"].supplier_name == "Tech Supplies Inc"
+    assert result.blanket_pos_by_id["BPO-002"].product_id == "PROD-002"
     
     # BPO-003: SUP-003 (Global Parts Ltd) for PROD-003
-    assert bpo_map["BPO-003"].supplier_id == "SUP-003"
-    assert bpo_map["BPO-003"].supplier_name == "Global Parts Ltd"
-    assert bpo_map["BPO-003"].product_id == "PROD-003"
+    assert result.blanket_pos_by_id["BPO-003"].supplier_id == "SUP-003"
+    assert result.blanket_pos_by_id["BPO-003"].supplier_name == "Global Parts Ltd"
+    assert result.blanket_pos_by_id["BPO-003"].product_id == "PROD-003"
     
     # BPO-004: SUP-001 (Acme Corp) for PROD-004
-    assert bpo_map["BPO-004"].supplier_id == "SUP-001"
-    assert bpo_map["BPO-004"].supplier_name == "Acme Corp"
-    assert bpo_map["BPO-004"].product_id == "PROD-004"
+    assert result.blanket_pos_by_id["BPO-004"].supplier_id == "SUP-001"
+    assert result.blanket_pos_by_id["BPO-004"].supplier_name == "Acme Corp"
+    assert result.blanket_pos_by_id["BPO-004"].product_id == "PROD-004"
 
 
 def test_fetch_blanket_pos_exact_unit_prices():
@@ -76,12 +75,11 @@ def test_fetch_blanket_pos_exact_unit_prices():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_blanket_pos()
     
-    price_map = {bpo.blanket_po_id: bpo.unit_price for bpo in result.blanket_pos}
-    
-    assert price_map["BPO-001"] == 25.50
-    assert price_map["BPO-002"] == 45.00
-    assert price_map["BPO-003"] == 75.00
-    assert price_map["BPO-004"] == 35.00
+    # Use blanket_pos_by_id index for direct lookup
+    assert result.blanket_pos_by_id["BPO-001"].unit_price == 25.50
+    assert result.blanket_pos_by_id["BPO-002"].unit_price == 45.00
+    assert result.blanket_pos_by_id["BPO-003"].unit_price == 75.00
+    assert result.blanket_pos_by_id["BPO-004"].unit_price == 35.00
 
 
 def test_fetch_blanket_pos_exact_total_quantities():
@@ -89,12 +87,11 @@ def test_fetch_blanket_pos_exact_total_quantities():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_blanket_pos()
     
-    qty_map = {bpo.blanket_po_id: bpo.total_quantity for bpo in result.blanket_pos}
-    
-    assert qty_map["BPO-001"] == 1000
-    assert qty_map["BPO-002"] == 500
-    assert qty_map["BPO-003"] == 800
-    assert qty_map["BPO-004"] == 600
+    # Use blanket_pos_by_id index for direct lookup
+    assert result.blanket_pos_by_id["BPO-001"].total_quantity == 1000
+    assert result.blanket_pos_by_id["BPO-002"].total_quantity == 500
+    assert result.blanket_pos_by_id["BPO-003"].total_quantity == 800
+    assert result.blanket_pos_by_id["BPO-004"].total_quantity == 600
 
 
 def test_fetch_blanket_pos_exact_remaining_quantities():
@@ -102,12 +99,11 @@ def test_fetch_blanket_pos_exact_remaining_quantities():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_blanket_pos()
     
-    remaining_map = {bpo.blanket_po_id: bpo.remaining_quantity for bpo in result.blanket_pos}
-    
-    assert remaining_map["BPO-001"] == 750
-    assert remaining_map["BPO-002"] == 450
-    assert remaining_map["BPO-003"] == 600
-    assert remaining_map["BPO-004"] == 500
+    # Use blanket_pos_by_id index for direct lookup
+    assert result.blanket_pos_by_id["BPO-001"].remaining_quantity == 750
+    assert result.blanket_pos_by_id["BPO-002"].remaining_quantity == 450
+    assert result.blanket_pos_by_id["BPO-003"].remaining_quantity == 600
+    assert result.blanket_pos_by_id["BPO-004"].remaining_quantity == 500
 
 
 def test_fetch_blanket_pos_terms_contain_payment_info():
@@ -177,10 +173,9 @@ def test_fetch_approved_suppliers_exact_names():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_approved_suppliers()
     
-    name_map = {s.supplier_id: s.supplier_name for s in result.suppliers}
-    
-    assert name_map["SUP-004"] == "Premium Parts Co"
-    assert name_map["SUP-005"] == "Fast Logistics Inc"
+    # Use suppliers_by_id index for direct lookup
+    assert result.suppliers_by_id["SUP-004"].supplier_name == "Premium Parts Co"
+    assert result.suppliers_by_id["SUP-005"].supplier_name == "Fast Logistics Inc"
 
 
 def test_fetch_approved_suppliers_have_contact_info():
@@ -200,10 +195,9 @@ def test_fetch_approved_suppliers_exact_contact_emails():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_approved_suppliers()
     
-    email_map = {s.supplier_id: s.contact_email for s in result.suppliers}
-    
-    assert email_map["SUP-004"] == "sales@premiumparts.com"
-    assert email_map["SUP-005"] == "orders@fastlogistics.com"
+    # Use suppliers_by_id index for direct lookup
+    assert result.suppliers_by_id["SUP-004"].contact_email == "sales@premiumparts.com"
+    assert result.suppliers_by_id["SUP-005"].contact_email == "orders@fastlogistics.com"
 
 
 def test_fetch_approved_suppliers_have_ratings():
@@ -221,10 +215,9 @@ def test_fetch_approved_suppliers_exact_ratings():
     fetcher = MockCRMDataFetcher()
     result = fetcher.fetch_approved_suppliers()
     
-    rating_map = {s.supplier_id: s.rating for s in result.suppliers}
-    
-    assert rating_map["SUP-004"] == 4.6
-    assert rating_map["SUP-005"] == 4.3
+    # Use suppliers_by_id index for direct lookup
+    assert result.suppliers_by_id["SUP-004"].rating == 4.6
+    assert result.suppliers_by_id["SUP-005"].rating == 4.3
 
 
 def test_fetch_approved_suppliers_have_categories():

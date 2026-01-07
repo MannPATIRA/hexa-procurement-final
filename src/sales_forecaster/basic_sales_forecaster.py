@@ -17,15 +17,16 @@ class BasicSalesForecaster(SalesForecasterInterface):
         forecast_period_end = now + timedelta(days=forecast_period_days)
         
         # Calculate total sales and days in historical period for each product
-        product_sales: dict[str, dict] = defaultdict(lambda: {"total_quantity": 0, "total_revenue": 0.0, "sale_days": set()})
+        # Use records_by_product index for efficient grouping
+        product_sales: dict[str, dict] = {}
         
-        for record in sales_data.records:
-            product_id = record.product_id
-            if product_id not in product_sales:
-                product_sales[product_id] = {"total_quantity": 0, "total_revenue": 0.0, "sale_days": set()}
-            product_sales[product_id]["total_quantity"] += record.quantity_sold
-            product_sales[product_id]["total_revenue"] += record.total_revenue
-            product_sales[product_id]["sale_days"].add(record.timestamp.date())
+        for product_id, records in sales_data.records_by_product.items():
+            product_sales[product_id] = {
+                "total_quantity": sum(r.quantity_sold for r in records),
+                "total_revenue": sum(r.total_revenue for r in records),
+                "sale_days": {r.timestamp.date() for r in records},
+                "record_count": len(records),
+            }
         
         # Calculate historical period in days
         historical_days = (sales_data.end_date - sales_data.start_date).days
@@ -36,7 +37,7 @@ class BasicSalesForecaster(SalesForecasterInterface):
         forecast_items = []
         for item in inventory_data.items:
             # Get sales data for this product
-            sales_info = product_sales.get(item.item_id, {"total_quantity": 0, "total_revenue": 0.0, "sale_days": set()})
+            sales_info = product_sales.get(item.item_id, {"total_quantity": 0, "total_revenue": 0.0, "sale_days": set(), "record_count": 0})
             
             # Calculate average daily sales
             # Use the full historical period to get average daily rate
@@ -49,7 +50,8 @@ class BasicSalesForecaster(SalesForecasterInterface):
             forecasted_revenue = avg_daily_revenue * forecast_period_days
             
             # Simple confidence: higher if we have more historical data
-            confidence_level = min(1.0, len([r for r in sales_data.records if r.product_id == item.item_id]) / 10.0)
+            # Use pre-computed record_count from product_sales
+            confidence_level = min(1.0, sales_info["record_count"] / 10.0)
             if confidence_level == 0:
                 confidence_level = 0.5  # Default confidence for products with no sales history
             

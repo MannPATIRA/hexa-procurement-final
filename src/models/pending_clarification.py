@@ -50,4 +50,9 @@ class PendingClarificationQueue:
 
     items: List[PendingClarification]
     updated_at: datetime
+    items_by_id: Dict[str, PendingClarification] = field(default_factory=dict, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        """Build index by clarification_id."""
+        index = {item.clarification_id: item for item in self.items}
+        object.__setattr__(self, 'items_by_id', index)

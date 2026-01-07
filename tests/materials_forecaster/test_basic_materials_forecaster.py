@@ -125,7 +125,8 @@ def test_material_quantity_formula_mat001():
     """Test MAT-001 quantity: PROD-001*2.5 + PROD-002*3.0 + PROD-004*2.0 = 564."""
     result = _get_materials_forecast(30)
     
-    mat001 = next((f for f in result.forecasts if f.material_id == "MAT-001"), None)
+    # Use forecasts_by_id index for direct lookup
+    mat001 = result.forecasts_by_id.get("MAT-001")
     assert mat001 is not None
     
     # Formula: 100*2.5 + 40*3.0 + 97*2.0 = 250 + 120 + 194 = 564
@@ -138,7 +139,8 @@ def test_material_quantity_formula_mat002():
     """Test MAT-002 quantity: PROD-001*1.0 + PROD-003*4.5 = 190."""
     result = _get_materials_forecast(30)
     
-    mat002 = next((f for f in result.forecasts if f.material_id == "MAT-002"), None)
+    # Use forecasts_by_id index for direct lookup
+    mat002 = result.forecasts_by_id.get("MAT-002")
     assert mat002 is not None
     
     # Formula: 100*1.0 + 20*4.5 = 100 + 90 = 190
@@ -151,7 +153,8 @@ def test_material_quantity_formula_mat003():
     """Test MAT-003 quantity: PROD-002*2.0 + PROD-004*1.5 = 225.5."""
     result = _get_materials_forecast(30)
     
-    mat003 = next((f for f in result.forecasts if f.material_id == "MAT-003"), None)
+    # Use forecasts_by_id index for direct lookup
+    mat003 = result.forecasts_by_id.get("MAT-003")
     assert mat003 is not None
     
     # Formula: 40*2.0 + 97*1.5 = 80 + 145.5 = 225.5
@@ -164,7 +167,8 @@ def test_material_quantity_formula_mat004():
     """Test MAT-004 quantity: PROD-003*1.5 = 30."""
     result = _get_materials_forecast(30)
     
-    mat004 = next((f for f in result.forecasts if f.material_id == "MAT-004"), None)
+    # Use forecasts_by_id index for direct lookup
+    mat004 = result.forecasts_by_id.get("MAT-004")
     assert mat004 is not None
     
     # Formula: 20*1.5 = 30
@@ -177,10 +181,9 @@ def test_all_material_quantities_30_days():
     """Test all material quantities for 30-day period."""
     result = _get_materials_forecast(30)
     
-    qty_map = {f.material_id: f.forecasted_quantity for f in result.forecasts}
-    
+    # Use forecasts_by_id index for direct lookup
     for mat_id, expected_qty in EXPECTED_MATERIAL_QUANTITIES_30_DAYS.items():
-        actual_qty = qty_map.get(mat_id)
+        actual_qty = result.forecasts_by_id.get(mat_id).forecasted_quantity
         assert actual_qty == expected_qty, \
             f"{mat_id}: expected {expected_qty}, got {actual_qty}"
 
@@ -190,14 +193,14 @@ def test_material_quantities_scale_with_period():
     result_30 = _get_materials_forecast(30)
     result_60 = _get_materials_forecast(60)
     
-    qty_30 = {f.material_id: f.forecasted_quantity for f in result_30.forecasts}
-    qty_60 = {f.material_id: f.forecasted_quantity for f in result_60.forecasts}
-    
-    for mat_id in qty_30.keys():
-        if qty_30[mat_id] > 0:
-            ratio = qty_60[mat_id] / qty_30[mat_id]
+    # Use forecasts_by_id indexes for direct comparison
+    for mat_id in result_30.forecasts_by_id.keys():
+        qty_30 = result_30.forecasts_by_id[mat_id].forecasted_quantity
+        qty_60 = result_60.forecasts_by_id[mat_id].forecasted_quantity
+        if qty_30 > 0:
+            ratio = qty_60 / qty_30
             assert 1.8 <= ratio <= 2.2, \
-                f"{mat_id}: 60-day ({qty_60[mat_id]}) not ~2x 30-day ({qty_30[mat_id]})"
+                f"{mat_id}: 60-day ({qty_60}) not ~2x 30-day ({qty_30})"
 
 
 # ============================================================================

@@ -28,4 +28,9 @@ class SupplierSearchStore:
     results: List[SupplierSearchResult]
     searched_at: datetime
     search_query: str
+    results_by_id: Dict[str, SupplierSearchResult] = field(default_factory=dict, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        """Build index by supplier_id."""
+        index = {result.supplier_id: result for result in self.results}
+        object.__setattr__(self, 'results_by_id', index)

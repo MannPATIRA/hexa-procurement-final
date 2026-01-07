@@ -1,9 +1,9 @@
 """Approved suppliers data model."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class SupplierStatus(str, Enum):
@@ -44,11 +44,15 @@ class ApprovedSuppliersList:
     suppliers: List[Supplier]
     source: str  # "ERP" or "CRM" or "MERGED"
     fetched_at: datetime
+    suppliers_by_id: Dict[str, Supplier] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        """Validate approved suppliers list."""
+        """Validate approved suppliers list and build index."""
         if self.fetched_at > datetime.now():
             raise ValueError("Fetched timestamp cannot be in the future")
         if self.source not in ["ERP", "CRM", "MERGED"]:
             raise ValueError("Source must be 'ERP', 'CRM', or 'MERGED'")
-
+        
+        # Build index
+        index = {supplier.supplier_id: supplier for supplier in self.suppliers}
+        object.__setattr__(self, 'suppliers_by_id', index)

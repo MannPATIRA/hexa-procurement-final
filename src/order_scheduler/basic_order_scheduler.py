@@ -34,10 +34,8 @@ class BasicOrderScheduler(OrderSchedulerInterface):
             if item.supplier_id:
                 material_suppliers[item.item_id] = (item.supplier_id, f"Supplier {item.supplier_id}")
         
-        # Guardrails lookup: material_id -> Guardrail
-        guardrails_map: dict[str, Guardrail] = {}
-        for guardrail in guardrails.items:
-            guardrails_map[guardrail.material_id] = guardrail
+        # Guardrails lookup: use items_by_id index
+        guardrails_map = guardrails.items_by_id
         
         # Daily demand lookup: material_id -> daily_demand
         daily_demand: dict[str, float] = {}
@@ -71,8 +69,8 @@ class BasicOrderScheduler(OrderSchedulerInterface):
             
             # Process each material
             for material_id, demand_per_day in daily_demand.items():
-                # Get material info
-                forecast_item = next((f for f in materials_forecast.forecasts if f.material_id == material_id), None)
+                # Get material info using forecasts_by_id index
+                forecast_item = materials_forecast.forecasts_by_id.get(material_id)
                 if not forecast_item:
                     continue
                 

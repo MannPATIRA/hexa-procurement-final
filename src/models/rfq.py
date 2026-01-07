@@ -42,4 +42,9 @@ class RFQStore:
 
     rfqs: List[RFQ]
     created_at: datetime
+    rfqs_by_id: Dict[str, RFQ] = field(default_factory=dict, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        """Build index by rfq_id."""
+        index = {rfq.rfq_id: rfq for rfq in self.rfqs}
+        object.__setattr__(self, 'rfqs_by_id', index)

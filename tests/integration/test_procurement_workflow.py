@@ -310,8 +310,8 @@ def test_full_workflow_end_to_end():
         order_schedule, data["blanket_pos"], supplier_results
     )
     
-    # Build RFQ lookup
-    rfq_lookup = {rfq.rfq_id: rfq for rfq in rfq_store.rfqs}
+    # Use rfqs_by_id index for lookups
+    rfq_lookup = rfq_store.rfqs_by_id
     
     # Step 4: Send RFQs
     email_client = MockEmailClient()

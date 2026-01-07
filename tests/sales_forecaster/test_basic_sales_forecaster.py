@@ -138,7 +138,8 @@ def test_forecast_quantity_formula_prod001():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days)
     
-    prod001_forecast = next((f for f in result.forecasts if f.item_id == "PROD-001"), None)
+    # Use forecasts_by_id index for direct lookup
+    prod001_forecast = result.forecasts_by_id.get("PROD-001")
     assert prod001_forecast is not None
     
     # PROD-001: 100 units total / 30 days * 30 = 100
@@ -158,7 +159,8 @@ def test_forecast_quantity_formula_prod002():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days)
     
-    prod002_forecast = next((f for f in result.forecasts if f.item_id == "PROD-002"), None)
+    # Use forecasts_by_id index for direct lookup
+    prod002_forecast = result.forecasts_by_id.get("PROD-002")
     assert prod002_forecast is not None
     
     # PROD-002: 40 units total / 30 days * 30 = 40
@@ -178,7 +180,8 @@ def test_forecast_quantity_formula_prod003():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days)
     
-    prod003_forecast = next((f for f in result.forecasts if f.item_id == "PROD-003"), None)
+    # Use forecasts_by_id index for direct lookup
+    prod003_forecast = result.forecasts_by_id.get("PROD-003")
     assert prod003_forecast is not None
     
     # PROD-003: 20 units total / 30 days * 30 = 20
@@ -198,7 +201,8 @@ def test_forecast_quantity_formula_prod004():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days)
     
-    prod004_forecast = next((f for f in result.forecasts if f.item_id == "PROD-004"), None)
+    # Use forecasts_by_id index for direct lookup
+    prod004_forecast = result.forecasts_by_id.get("PROD-004")
     assert prod004_forecast is not None
     
     # PROD-004: 97 units total / 30 days * 30 = 97
@@ -217,13 +221,12 @@ def test_forecast_all_quantities_for_30_days():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days=30)
     
-    forecast_map = {f.item_id: f.forecasted_quantity for f in result.forecasts}
-    
+    # Use forecasts_by_id index for direct lookup
     # For 30-day forecast over 30-day history, quantity equals total sales
-    assert forecast_map["PROD-001"] == 100
-    assert forecast_map["PROD-002"] == 40
-    assert forecast_map["PROD-003"] == 20
-    assert forecast_map["PROD-004"] == 97
+    assert result.forecasts_by_id["PROD-001"].forecasted_quantity == 100
+    assert result.forecasts_by_id["PROD-002"].forecasted_quantity == 40
+    assert result.forecasts_by_id["PROD-003"].forecasted_quantity == 20
+    assert result.forecasts_by_id["PROD-004"].forecasted_quantity == 97
 
 
 def test_forecast_scales_with_period():
@@ -262,19 +265,18 @@ def test_confidence_level_formula():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days=30)
     
-    confidence_map = {f.item_id: f.confidence_level for f in result.forecasts}
-    
+    # Use forecasts_by_id index for direct lookup
     # PROD-001: 5 sales records → 5/10 = 0.5
-    assert confidence_map["PROD-001"] == _calculate_expected_confidence("PROD-001")
+    assert result.forecasts_by_id["PROD-001"].confidence_level == _calculate_expected_confidence("PROD-001")
     
     # PROD-002: 4 sales records → 4/10 = 0.4
-    assert confidence_map["PROD-002"] == _calculate_expected_confidence("PROD-002")
+    assert result.forecasts_by_id["PROD-002"].confidence_level == _calculate_expected_confidence("PROD-002")
     
     # PROD-003: 4 sales records → 4/10 = 0.4
-    assert confidence_map["PROD-003"] == _calculate_expected_confidence("PROD-003")
+    assert result.forecasts_by_id["PROD-003"].confidence_level == _calculate_expected_confidence("PROD-003")
     
     # PROD-004: 5 sales records → 5/10 = 0.5
-    assert confidence_map["PROD-004"] == _calculate_expected_confidence("PROD-004")
+    assert result.forecasts_by_id["PROD-004"].confidence_level == _calculate_expected_confidence("PROD-004")
 
 
 def test_confidence_level_range():
@@ -322,13 +324,12 @@ def test_forecasted_revenue_exact_values():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days=30)
     
-    revenue_map = {f.item_id: f.forecasted_revenue for f in result.forecasts}
-    
+    # Use forecasts_by_id index for direct lookup
     # For 30-day forecast over 30-day history, revenue equals total revenue
-    assert abs(revenue_map["PROD-001"] - 2550.00) < 0.01
-    assert abs(revenue_map["PROD-002"] - 1800.00) < 0.01
-    assert abs(revenue_map["PROD-003"] - 1500.00) < 0.01
-    assert abs(revenue_map["PROD-004"] - 3395.00) < 0.01
+    assert abs(result.forecasts_by_id["PROD-001"].forecasted_revenue - 2550.00) < 0.01
+    assert abs(result.forecasts_by_id["PROD-002"].forecasted_revenue - 1800.00) < 0.01
+    assert abs(result.forecasts_by_id["PROD-003"].forecasted_revenue - 1500.00) < 0.01
+    assert abs(result.forecasts_by_id["PROD-004"].forecasted_revenue - 3395.00) < 0.01
 
 
 # ============================================================================
@@ -345,12 +346,11 @@ def test_forecast_contains_correct_item_names():
     
     result = forecaster.forecast_sales(inventory_data, sales_data, forecast_period_days=30)
     
-    name_map = {f.item_id: f.item_name for f in result.forecasts}
-    
-    assert name_map["PROD-001"] == "Widget A"
-    assert name_map["PROD-002"] == "Widget B"
-    assert name_map["PROD-003"] == "Widget C"
-    assert name_map["PROD-004"] == "Widget D"
+    # Use forecasts_by_id index for direct lookup
+    assert result.forecasts_by_id["PROD-001"].item_name == "Widget A"
+    assert result.forecasts_by_id["PROD-002"].item_name == "Widget B"
+    assert result.forecasts_by_id["PROD-003"].item_name == "Widget C"
+    assert result.forecasts_by_id["PROD-004"].item_name == "Widget D"
 
 
 def test_forecast_period_dates_on_each_item():

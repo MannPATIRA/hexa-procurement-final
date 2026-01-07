@@ -130,7 +130,8 @@ def test_guardrail_formula_mat001():
     """Test guardrail calculations for MAT-001 using exact formulas."""
     result = _get_guardrail_store()
     
-    mat001 = next((g for g in result.items if g.material_id == "MAT-001"), None)
+    # Use items_by_id index for direct lookup
+    mat001 = result.items_by_id.get("MAT-001")
     assert mat001 is not None
     
     expected = _calculate_expected_guardrails(EXPECTED_MATERIAL_FORECASTS["MAT-001"])
@@ -160,7 +161,8 @@ def test_guardrail_formula_mat002():
     """Test guardrail calculations for MAT-002 using exact formulas."""
     result = _get_guardrail_store()
     
-    mat002 = next((g for g in result.items if g.material_id == "MAT-002"), None)
+    # Use items_by_id index for direct lookup
+    mat002 = result.items_by_id.get("MAT-002")
     assert mat002 is not None
     
     expected = _calculate_expected_guardrails(EXPECTED_MATERIAL_FORECASTS["MAT-002"])
@@ -175,7 +177,8 @@ def test_guardrail_formula_mat003():
     """Test guardrail calculations for MAT-003 using exact formulas."""
     result = _get_guardrail_store()
     
-    mat003 = next((g for g in result.items if g.material_id == "MAT-003"), None)
+    # Use items_by_id index for direct lookup
+    mat003 = result.items_by_id.get("MAT-003")
     assert mat003 is not None
     
     expected = _calculate_expected_guardrails(EXPECTED_MATERIAL_FORECASTS["MAT-003"])
@@ -190,7 +193,8 @@ def test_guardrail_formula_mat004():
     """Test guardrail calculations for MAT-004 using exact formulas."""
     result = _get_guardrail_store()
     
-    mat004 = next((g for g in result.items if g.material_id == "MAT-004"), None)
+    # Use items_by_id index for direct lookup
+    mat004 = result.items_by_id.get("MAT-004")
     assert mat004 is not None
     
     expected = _calculate_expected_guardrails(EXPECTED_MATERIAL_FORECASTS["MAT-004"])
@@ -205,11 +209,10 @@ def test_all_guardrails_exact_values():
     """Test exact guardrail values for all materials."""
     result = _get_guardrail_store()
     
-    guardrail_map = {g.material_id: g for g in result.items}
-    
+    # Use items_by_id index for direct lookup
     for mat_id, forecast_qty in EXPECTED_MATERIAL_FORECASTS.items():
         expected = _calculate_expected_guardrails(forecast_qty)
-        actual = guardrail_map[mat_id]
+        actual = result.items_by_id[mat_id]
         
         assert actual.safety_stock == expected["safety_stock"], \
             f"{mat_id}: safety_stock mismatch"
@@ -361,12 +364,11 @@ def test_guardrails_proportional_to_demand():
     """Test that guardrails are proportional to material demand."""
     result = _get_guardrail_store()
     
-    guardrail_map = {g.material_id: g for g in result.items}
-    
+    # Use items_by_id index for direct lookup
     # MAT-001 has highest demand (564), should have highest guardrails
     # MAT-004 has lowest demand (30), should have lowest guardrails
-    mat001 = guardrail_map["MAT-001"]
-    mat004 = guardrail_map["MAT-004"]
+    mat001 = result.items_by_id["MAT-001"]
+    mat004 = result.items_by_id["MAT-004"]
     
     assert mat001.safety_stock > mat004.safety_stock
     assert mat001.reorder_point > mat004.reorder_point
@@ -378,13 +380,12 @@ def test_demand_to_guardrail_ratio():
     """Test that guardrail ratios match demand ratios approximately."""
     result = _get_guardrail_store()
     
-    guardrail_map = {g.material_id: g for g in result.items}
-    
+    # Use items_by_id index for direct lookup
     # MAT-001 demand is 564/30 = 18.8 (ratio to MAT-004: ~18.8)
     # MAT-004 demand is 30/30 = 1.0
     demand_ratio = EXPECTED_MATERIAL_FORECASTS["MAT-001"] / EXPECTED_MATERIAL_FORECASTS["MAT-004"]
     
     # Safety stock ratio should be similar to demand ratio
-    safety_ratio = guardrail_map["MAT-001"].safety_stock / guardrail_map["MAT-004"].safety_stock
+    safety_ratio = result.items_by_id["MAT-001"].safety_stock / result.items_by_id["MAT-004"].safety_stock
     assert abs(safety_ratio - demand_ratio) < 1.0, \
         f"Safety stock ratio ({safety_ratio}) should be close to demand ratio ({demand_ratio})"

@@ -41,13 +41,11 @@ def test_fetch_inventory_data_exact_quantities():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_inventory_data()
     
-    quantity_map = {item.item_id: item.quantity for item in result.items}
-    
-    # Exact quantities from mock_erp.py
-    assert quantity_map["PROD-001"] == 30
-    assert quantity_map["PROD-002"] == 200
-    assert quantity_map["PROD-003"] == 3
-    assert quantity_map["PROD-004"] == 150
+    # Use items_by_id index for direct lookup
+    assert result.items_by_id["PROD-001"].quantity == 30
+    assert result.items_by_id["PROD-002"].quantity == 200
+    assert result.items_by_id["PROD-003"].quantity == 3
+    assert result.items_by_id["PROD-004"].quantity == 150
 
 
 def test_fetch_inventory_data_exact_prices():
@@ -55,13 +53,11 @@ def test_fetch_inventory_data_exact_prices():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_inventory_data()
     
-    price_map = {item.item_id: item.unit_price for item in result.items}
-    
-    # Exact prices from mock_erp.py
-    assert price_map["PROD-001"] == 25.50
-    assert price_map["PROD-002"] == 45.00
-    assert price_map["PROD-003"] == 75.00
-    assert price_map["PROD-004"] == 35.00
+    # Use items_by_id index for direct lookup
+    assert result.items_by_id["PROD-001"].unit_price == 25.50
+    assert result.items_by_id["PROD-002"].unit_price == 45.00
+    assert result.items_by_id["PROD-003"].unit_price == 75.00
+    assert result.items_by_id["PROD-004"].unit_price == 35.00
 
 
 def test_fetch_inventory_data_exact_product_names():
@@ -69,12 +65,11 @@ def test_fetch_inventory_data_exact_product_names():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_inventory_data()
     
-    name_map = {item.item_id: item.item_name for item in result.items}
-    
-    assert name_map["PROD-001"] == "Widget A"
-    assert name_map["PROD-002"] == "Widget B"
-    assert name_map["PROD-003"] == "Widget C"
-    assert name_map["PROD-004"] == "Widget D"
+    # Use items_by_id index for direct lookup
+    assert result.items_by_id["PROD-001"].item_name == "Widget A"
+    assert result.items_by_id["PROD-002"].item_name == "Widget B"
+    assert result.items_by_id["PROD-003"].item_name == "Widget C"
+    assert result.items_by_id["PROD-004"].item_name == "Widget D"
 
 
 def test_fetch_inventory_data_supplier_assignments():
@@ -82,12 +77,11 @@ def test_fetch_inventory_data_supplier_assignments():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_inventory_data()
     
-    supplier_map = {item.item_id: item.supplier_id for item in result.items}
-    
-    assert supplier_map["PROD-001"] == "SUP-001"  # Acme Corp
-    assert supplier_map["PROD-002"] == "SUP-002"  # Tech Supplies Inc
-    assert supplier_map["PROD-003"] == "SUP-003"  # Global Parts Ltd
-    assert supplier_map["PROD-004"] == "SUP-001"  # Acme Corp (same as PROD-001)
+    # Use items_by_id index for direct lookup
+    assert result.items_by_id["PROD-001"].supplier_id == "SUP-001"  # Acme Corp
+    assert result.items_by_id["PROD-002"].supplier_id == "SUP-002"  # Tech Supplies Inc
+    assert result.items_by_id["PROD-003"].supplier_id == "SUP-003"  # Global Parts Ltd
+    assert result.items_by_id["PROD-004"].supplier_id == "SUP-001"  # Acme Corp (same as PROD-001)
 
 
 # ============================================================================
@@ -132,27 +126,26 @@ def test_fetch_delivery_history_supplier_product_mapping():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_delivery_history()
     
-    record_map = {record.delivery_id: record for record in result.records}
-    
+    # Use records_by_id index for direct lookup
     # DEL-001: SUP-001 delivers PROD-001
-    assert record_map["DEL-001"].supplier_id == "SUP-001"
-    assert record_map["DEL-001"].product_id == "PROD-001"
-    assert record_map["DEL-001"].supplier_name == "Acme Corp"
+    assert result.records_by_id["DEL-001"].supplier_id == "SUP-001"
+    assert result.records_by_id["DEL-001"].product_id == "PROD-001"
+    assert result.records_by_id["DEL-001"].supplier_name == "Acme Corp"
     
     # DEL-002: SUP-002 delivers PROD-002
-    assert record_map["DEL-002"].supplier_id == "SUP-002"
-    assert record_map["DEL-002"].product_id == "PROD-002"
-    assert record_map["DEL-002"].supplier_name == "Tech Supplies Inc"
+    assert result.records_by_id["DEL-002"].supplier_id == "SUP-002"
+    assert result.records_by_id["DEL-002"].product_id == "PROD-002"
+    assert result.records_by_id["DEL-002"].supplier_name == "Tech Supplies Inc"
     
     # DEL-003: SUP-003 delivers PROD-003
-    assert record_map["DEL-003"].supplier_id == "SUP-003"
-    assert record_map["DEL-003"].product_id == "PROD-003"
-    assert record_map["DEL-003"].supplier_name == "Global Parts Ltd"
+    assert result.records_by_id["DEL-003"].supplier_id == "SUP-003"
+    assert result.records_by_id["DEL-003"].product_id == "PROD-003"
+    assert result.records_by_id["DEL-003"].supplier_name == "Global Parts Ltd"
     
     # DEL-004: SUP-001 delivers PROD-004
-    assert record_map["DEL-004"].supplier_id == "SUP-001"
-    assert record_map["DEL-004"].product_id == "PROD-004"
-    assert record_map["DEL-004"].supplier_name == "Acme Corp"
+    assert result.records_by_id["DEL-004"].supplier_id == "SUP-001"
+    assert result.records_by_id["DEL-004"].product_id == "PROD-004"
+    assert result.records_by_id["DEL-004"].supplier_name == "Acme Corp"
 
 
 def test_fetch_delivery_history_exact_quantities():
@@ -160,12 +153,11 @@ def test_fetch_delivery_history_exact_quantities():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_delivery_history()
     
-    qty_map = {record.delivery_id: record.quantity for record in result.records}
-    
-    assert qty_map["DEL-001"] == 100
-    assert qty_map["DEL-002"] == 50
-    assert qty_map["DEL-003"] == 200
-    assert qty_map["DEL-004"] == 150
+    # Use records_by_id index for direct lookup
+    assert result.records_by_id["DEL-001"].quantity == 100
+    assert result.records_by_id["DEL-002"].quantity == 50
+    assert result.records_by_id["DEL-003"].quantity == 200
+    assert result.records_by_id["DEL-004"].quantity == 150
 
 
 def test_fetch_delivery_history_lead_time_calculation():
@@ -218,12 +210,10 @@ def test_fetch_sales_data_total_quantity_per_product():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_sales_data()
     
-    # Aggregate sales by product
+    # Use records_by_product index for aggregation
     sales_by_product = {}
-    for record in result.records:
-        if record.product_id not in sales_by_product:
-            sales_by_product[record.product_id] = 0
-        sales_by_product[record.product_id] += record.quantity_sold
+    for product_id, records in result.records_by_product.items():
+        sales_by_product[product_id] = sum(r.quantity_sold for r in records)
     
     # Expected totals from mock data:
     # PROD-001: 15+20+10+25+30 = 100
@@ -241,12 +231,10 @@ def test_fetch_sales_data_total_revenue_per_product():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_sales_data()
     
-    # Aggregate revenue by product
+    # Use records_by_product index for aggregation
     revenue_by_product = {}
-    for record in result.records:
-        if record.product_id not in revenue_by_product:
-            revenue_by_product[record.product_id] = 0.0
-        revenue_by_product[record.product_id] += record.total_revenue
+    for product_id, records in result.records_by_product.items():
+        revenue_by_product[product_id] = sum(r.total_revenue for r in records)
     
     # Expected totals from mock data:
     # PROD-001: 382.50+510.00+255.00+637.50+765.00 = 2550.00
@@ -264,12 +252,10 @@ def test_fetch_sales_data_days_with_sales_per_product():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_sales_data()
     
-    # Count unique days with sales per product
+    # Use records_by_product index to count unique days
     days_by_product = {}
-    for record in result.records:
-        if record.product_id not in days_by_product:
-            days_by_product[record.product_id] = set()
-        days_by_product[record.product_id].add(record.timestamp.date())
+    for product_id, records in result.records_by_product.items():
+        days_by_product[product_id] = {r.timestamp.date() for r in records}
     
     # PROD-001: 5 different days, PROD-002: 4, PROD-003: 4, PROD-004: 5
     assert len(days_by_product["PROD-001"]) == 5
@@ -419,12 +405,11 @@ def test_fetch_blanket_pos_exact_unit_prices():
     fetcher = MockERPDataFetcher()
     result = fetcher.fetch_blanket_pos()
     
-    price_map = {bpo.blanket_po_id: bpo.unit_price for bpo in result.blanket_pos}
-    
-    assert price_map["BPO-001"] == 25.50  # PROD-001 price
-    assert price_map["BPO-002"] == 45.00  # PROD-002 price
-    assert price_map["BPO-003"] == 75.00  # PROD-003 price
-    assert price_map["BPO-004"] == 35.00  # PROD-004 price
+    # Use blanket_pos_by_id index for direct lookup
+    assert result.blanket_pos_by_id["BPO-001"].unit_price == 25.50  # PROD-001 price
+    assert result.blanket_pos_by_id["BPO-002"].unit_price == 45.00  # PROD-002 price
+    assert result.blanket_pos_by_id["BPO-003"].unit_price == 75.00  # PROD-003 price
+    assert result.blanket_pos_by_id["BPO-004"].unit_price == 35.00  # PROD-004 price
 
 
 def test_fetch_blanket_pos_remaining_less_than_total():

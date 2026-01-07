@@ -43,4 +43,9 @@ class QuoteStore:
 
     quotes: List[Quote]
     updated_at: datetime
+    quotes_by_id: Dict[str, Quote] = field(default_factory=dict, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        """Build index by quote_id."""
+        index = {quote.quote_id: quote for quote in self.quotes}
+        object.__setattr__(self, 'quotes_by_id', index)

@@ -1,5 +1,6 @@
 """Order schedule data model."""
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -31,6 +32,7 @@ class OrderItem:
     order_status: OrderStatus
     metadata: Dict[str, str] = field(default_factory=dict)
 
+
 @dataclass(frozen=True)
 class ProjectedInventoryLevel:
     """Represents projected inventory level at a point in time."""
@@ -41,6 +43,7 @@ class ProjectedInventoryLevel:
     is_below_reorder_point: bool
     is_above_maximum_stock: bool
 
+
 @dataclass(frozen=True)
 class OrderSchedule:
     """Represents order schedule with orders and projected inventory levels."""
@@ -50,3 +53,11 @@ class OrderSchedule:
     schedule_start_date: datetime
     schedule_end_date: datetime
     generated_at: datetime
+    orders_by_material: Dict[str, List[OrderItem]] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Build index by material_id."""
+        index: Dict[str, List[OrderItem]] = defaultdict(list)
+        for order in self.orders:
+            index[order.material_id].append(order)
+        object.__setattr__(self, 'orders_by_material', dict(index))

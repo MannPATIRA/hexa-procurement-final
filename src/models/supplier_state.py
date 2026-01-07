@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from models.approved_suppliers_list import SupplierStatus
 
@@ -38,3 +38,9 @@ class SupplierStateStore:
 
     states: List[SupplierState]
     built_at: datetime
+    states_by_key: Dict[Tuple[str, str], SupplierState] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Build index by (supplier_id, product_id) tuple."""
+        index = {(state.supplier_id, state.product_id): state for state in self.states}
+        object.__setattr__(self, 'states_by_key', index)
