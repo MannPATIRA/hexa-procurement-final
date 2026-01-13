@@ -6,6 +6,7 @@ from models.sales_forecast import SalesForecast
 from models.sales_data import SalesData
 from models.bom import BOMData
 from models.materials_forecast import MaterialsForecast, MaterialForecastItem
+from models.internal_order import InternalOrderSchedule
 
 class BasicMaterialsForecaster(MaterialsForecasterInterface):
     def __init__(self, materials_lookup: Optional[dict[str, str]] = None):
@@ -156,3 +157,76 @@ class BasicMaterialsForecaster(MaterialsForecasterInterface):
             result[material_id] = usage_records
         
         return result
+    
+    def forecast_materials_from_internal_orders(
+        self,
+        internal_order_schedule: InternalOrderSchedule,
+        bom_data: BOMData,
+        forecast_period_days: int,
+    ) -> MaterialsForecast:
+        """Generate materials forecast based on internal production order schedule.
+        
+        This method explodes BOM requirements based on when production actually
+        happens, providing timed material requirements that align with production
+        schedule rather than uniform daily demand.
+        
+        Args:
+            internal_order_schedule: Schedule of production orders
+            bom_data: Bill of Materials data
+            forecast_period_days: Forecast period in days
+            
+        Returns:
+            MaterialsForecast with material requirements timed to production schedule
+        """
+        now = datetime.now()
+        
+        # Use items_by_product index from BOM data
+        bom_by_product = bom_data.items_by_product
+        
+        # Aggregate material requirements by material_id
+        # Key: material_id, Value: total_quantity
+        material_requirements: dict[str, float] = defaultdict(float)
+        
+        # Process each internal order
+        for order in internal_order_schedule.orders:
+            product_id = order.product_id
+            production_quantity = order.quantity
+            
+            # Get BOM items for this product
+            bom_items = bom_by_product.get(product_id, [])
+            
+            for bom_item in bom_items:
+                material_id = bom_item.material_id
+                quantity_required = bom_item.quantity_required
+                
+                # Calculate material requirement: production quantity * material per product
+                material_quantity = production_quantity * quantity_required
+                
+                # Aggregate material requirements
+                material_requirements[material_id] += material_quantity
+        
+        # Create forecast items for each material
+        forecast_items = []
+        schedule_start = internal_order_schedule.schedule_start_date
+        schedule_end = internal_order_schedule.schedule_end_date
+        
+        for material_id, total_quantity in material_requirements.items():
+            # Get material name from lookup, or use material_id as fallback
+            material_name = self.materials_lookup.get(material_id, f"Material {material_id}")
+            
+            forecast_item = MaterialForecastItem(
+                material_id=material_id,
+                material_name=material_name,
+                forecasted_quantity=total_quantity,
+                forecast_period_start=schedule_start,
+                forecast_period_end=schedule_end,
+                confidence_level=0.8,  # Higher confidence since based on scheduled production
+            )
+            forecast_items.append(forecast_item)
+        
+        return MaterialsForecast(
+            forecasts=forecast_items,
+            forecast_generated_at=now,
+            forecast_period_start=schedule_start,
+            forecast_period_end=schedule_end,
+        )

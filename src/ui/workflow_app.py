@@ -20,11 +20,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 # Import all the modules
-from erp_data_fetcher.mock_erp_fetcher import MockERPDataFetcher
+from erp_data_fetcher.mock_erp_fetcher import MockERPDataFetcher, mock_erp
 from crm_data_fetcher.mock_crm_fetcher import MockCRMDataFetcher
 from sales_forecaster.basic_sales_forecaster import BasicSalesForecaster
+from internal_order_scheduler.basic_internal_order_scheduler import BasicInternalOrderScheduler
 from materials_forecaster.basic_materials_forecaster import BasicMaterialsForecaster
 from supplier_state_calculator.basic_supplier_state_calculator import BasicSupplierStateCalculator
 from basic_guardrail_calculator import BasicGuardrailCalculator
@@ -39,7 +41,7 @@ from quote_parser.basic_quote_parser import BasicQuoteParser
 from quote_evaluator.basic_quote_evaluator import BasicQuoteEvaluator
 from order_schedule_updater.basic_order_schedule_updater import BasicOrderScheduleUpdater
 
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 from models.classification_result import ReplyType
 from models.pending_clarification import PendingClarification, ClarificationPriority
 
@@ -458,13 +460,92 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Sales forecast generated!")
     
     # ========================================================================
-    # STEP 4: GENERATE MATERIALS FORECAST
+    # STEP 4: SCHEDULE INTERNAL ORDERS (PRODUCTION)
     # ========================================================================
-    step_header(4, "Generate Materials Forecast", "📈")
+    step_header(4, "Schedule Internal Orders (Production)", "🏭")
     
-    with st.spinner("Generating materials forecast..."):
+    with st.spinner("Scheduling internal production orders..."):
+        # Filter inventory to get only products (not materials)
+        product_inventory = InventoryData(
+            items=[item for item in inventory_data.items if item.item_type == ItemType.PRODUCT],
+            fetched_at=inventory_data.fetched_at,
+        )
+        
+        # Get production info from mock ERP
+        production_info = mock_erp.product_production_store
+        
+        # Schedule internal orders
+        internal_scheduler = BasicInternalOrderScheduler()
+        internal_schedule = internal_scheduler.schedule_internal_orders(
+            sales_forecast, product_inventory, production_info, num_days=schedule_days
+        )
+    
+    col1, col2, col3 = st.columns(3)
+    total_production_qty = sum(o.quantity for o in internal_schedule.orders)
+    col1.metric("Production Orders", len(internal_schedule.orders))
+    col2.metric("Total Units to Produce", f"{total_production_qty:,}")
+    col3.metric("Schedule Period", f"{schedule_days} days")
+    
+    # Internal orders chart
+    if internal_schedule.orders:
+        st.subheader("📊 Production Orders by Product")
+        # Group orders by product
+        orders_by_product = defaultdict(int)
+        for order in internal_schedule.orders:
+            orders_by_product[order.product_name] += order.quantity
+        
+        fig, ax = plt.subplots(figsize=(10, 5))
+        products = list(orders_by_product.keys())
+        quantities = list(orders_by_product.values())
+        colors = plt.cm.Set3(range(len(products)))
+        bars = ax.bar(products, quantities, color=colors, edgecolor='white', linewidth=1.5)
+        
+        # Add value labels
+        for bar, qty in zip(bars, quantities):
+            height = bar.get_height()
+            ax.annotate(f'{qty:,.0f}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom',
+                        fontsize=10, fontweight='bold')
+        
+        ax.set_ylabel('Production Quantity', fontsize=11)
+        ax.set_xlabel('', fontsize=11)
+        ax.set_title(f"Production Orders Scheduled ({schedule_days} days)", fontsize=14, fontweight='bold', pad=15)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.tick_params(axis='x', rotation=15)
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+    
+    with st.expander("📋 Internal Order Schedule Details", expanded=True):
+        if internal_schedule.orders:
+            df = dataframe_from_items(internal_schedule.orders, {
+                "Product ID": "product_id",
+                "Product Name": "product_name",
+                "Quantity": "quantity",
+                "Start Date": lambda x: x.start_date.strftime("%Y-%m-%d"),
+                "Completion Date": lambda x: x.completion_date.strftime("%Y-%m-%d"),
+                "Status": lambda x: x.status.value,
+            })
+            st.dataframe(df, width='stretch', hide_index=True)
+        else:
+            st.info("No internal orders scheduled - product inventory is sufficient.")
+    
+    st.success("✅ Internal orders scheduled!")
+    
+    # ========================================================================
+    # STEP 5: GENERATE MATERIALS FORECAST FROM INTERNAL ORDERS
+    # ========================================================================
+    step_header(5, "Generate Materials Forecast", "📈")
+    
+    with st.spinner("Generating materials forecast from production schedule..."):
         materials_forecaster = BasicMaterialsForecaster(materials_lookup=materials_lookup)
-        materials_forecast = materials_forecaster.forecast_materials(sales_forecast, bom_data, forecast_days)
+        materials_forecast = materials_forecaster.forecast_materials_from_internal_orders(
+            internal_schedule, bom_data, forecast_days
+        )
     
     col1, col2 = st.columns(2)
     total_materials = sum(f.forecasted_quantity for f in materials_forecast.forecasts)
@@ -504,9 +585,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Materials forecast generated!")
     
     # ========================================================================
-    # STEP 5: CALCULATE SUPPLIER STATE
+    # STEP 6: CALCULATE SUPPLIER STATE
     # ========================================================================
-    step_header(5, "Calculate Supplier State", "🔧")
+    step_header(6, "Calculate Supplier State", "🔧")
     
     with st.spinner("Calculating supplier states..."):
         supplier_calculator = BasicSupplierStateCalculator()
@@ -537,9 +618,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Supplier states calculated!")
     
     # ========================================================================
-    # STEP 6: CALCULATE GUARDRAILS
+    # STEP 7: CALCULATE GUARDRAILS
     # ========================================================================
-    step_header(6, "Calculate Inventory Guardrails", "🔧")
+    step_header(7, "Calculate Inventory Guardrails", "🔧")
     
     with st.spinner("Calculating guardrails..."):
         guardrail_calculator = BasicGuardrailCalculator()
@@ -596,9 +677,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Guardrails calculated!")
     
     # ========================================================================
-    # STEP 7: SCHEDULE ORDERS
+    # STEP 8: SCHEDULE EXTERNAL ORDERS
     # ========================================================================
-    step_header(7, "Schedule Orders", "📅")
+    step_header(8, "Schedule External Orders", "📅")
     
     # Create material inventory for scheduling (low quantities to trigger orders)
     now = datetime.now()
@@ -607,6 +688,7 @@ def run_workflow(forecast_days: int, schedule_days: int):
             InventoryItem(
                 item_id=m_id,
                 item_name=m_name,
+                item_type=ItemType.MATERIAL,
                 quantity=10,  # Low quantity to trigger orders
                 unit_price=5.0,
                 location="Warehouse-1",
@@ -659,9 +741,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Orders scheduled!")
     
     # ========================================================================
-    # STEP 8: WEB SEARCH FOR SUPPLIERS
+    # STEP 9: WEB SEARCH FOR SUPPLIERS
     # ========================================================================
-    step_header(8, "Web Search for Suppliers", "🌐")
+    step_header(9, "Web Search for Suppliers", "🌐")
     
     with st.spinner("Searching for suppliers online..."):
         web_scanner = MockWebScanner()
@@ -708,9 +790,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Supplier search complete!")
     
     # ========================================================================
-    # STEP 9: GENERATE RFQS
+    # STEP 10: GENERATE RFQS
     # ========================================================================
-    step_header(9, "Generate RFQs", "📝")
+    step_header(10, "Generate RFQs", "📝")
     
     with st.spinner("Generating RFQs..."):
         rfq_generator = BasicRFQGenerator()
@@ -738,9 +820,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
         return
     
     # ========================================================================
-    # STEP 10: SEND RFQS
+    # STEP 11: SEND RFQS
     # ========================================================================
-    step_header(10, "Send RFQs via Email", "📧")
+    step_header(11, "Send RFQs via Email", "📧")
     
     with st.spinner("Sending RFQs via email..."):
         email_client = MockEmailClient()
@@ -773,9 +855,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ RFQs sent!")
     
     # ========================================================================
-    # STEP 11: LISTEN FOR REPLIES
+    # STEP 12: LISTEN FOR REPLIES
     # ========================================================================
-    step_header(11, "Listen for Email Replies", "📬")
+    step_header(12, "Listen for Email Replies", "📬")
     
     with st.spinner("Checking for replies..."):
         email_listener = MockEmailListener()
@@ -805,9 +887,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
         return
     
     # ========================================================================
-    # STEP 12: CLASSIFY REPLIES
+    # STEP 13: CLASSIFY REPLIES
     # ========================================================================
-    step_header(12, "Classify Replies", "🏷️")
+    step_header(13, "Classify Replies", "🏷️")
     
     with st.spinner("Classifying replies..."):
         reply_classifier = MockReplyClassifier()
@@ -847,9 +929,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Replies classified!")
     
     # ========================================================================
-    # STEP 13: AUTO-RESPOND & QUEUE FOR HUMAN
+    # STEP 14: AUTO-RESPOND & QUEUE FOR HUMAN
     # ========================================================================
-    step_header(13, "Auto-Respond & Queue for Human Review", "🤖")
+    step_header(14, "Auto-Respond & Queue for Human Review", "🤖")
     
     with st.spinner("Processing clarification requests..."):
         auto_responder = BasicAutoResponder()
@@ -908,9 +990,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.success("✅ Clarifications processed!")
     
     # ========================================================================
-    # STEP 14: EXTRACT QUOTES
+    # STEP 15: EXTRACT QUOTES
     # ========================================================================
-    step_header(14, "Extract & Parse Quotes", "💰")
+    step_header(15, "Extract & Parse Quotes", "💰")
     
     with st.spinner("Extracting quotes from replies..."):
         quote_parser = BasicQuoteParser()
@@ -959,9 +1041,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
         return
     
     # ========================================================================
-    # STEP 15: EVALUATE QUOTES
+    # STEP 16: EVALUATE QUOTES
     # ========================================================================
-    step_header(15, "Evaluate Quotes", "⚖️")
+    step_header(16, "Evaluate Quotes", "⚖️")
     
     with st.spinner("Evaluating quotes against current orders..."):
         quote_evaluator = BasicQuoteEvaluator()
@@ -1015,9 +1097,9 @@ def run_workflow(forecast_days: int, schedule_days: int):
         st.info("No evaluations to perform.")
     
     # ========================================================================
-    # STEP 16: UPDATE ORDER SCHEDULE
+    # STEP 17: UPDATE ORDER SCHEDULE
     # ========================================================================
-    step_header(16, "Update Order Schedule", "📝")
+    step_header(17, "Update Order Schedule", "📝")
     
     with st.spinner("Updating order schedule with accepted quotes..."):
         schedule_updater = BasicOrderScheduleUpdater()
@@ -1061,17 +1143,18 @@ def run_workflow(forecast_days: int, schedule_days: int):
     st.markdown("""
     <div style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); padding: 20px; border-radius: 10px; text-align: center;">
         <h2 style="color: white; margin: 0;">✅ Workflow Complete!</h2>
-        <p style="color: white; margin: 10px 0 0 0;">All 16 procurement workflow steps have been executed successfully.</p>
+        <p style="color: white; margin: 10px 0 0 0;">All 17 procurement workflow steps have been executed successfully.</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Summary
     st.subheader("📊 Workflow Summary")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("📈 Products Forecasted", len(sales_forecast.forecasts))
-    col2.metric("🔩 Materials Forecasted", len(materials_forecast.forecasts))
-    col3.metric("📦 Orders Scheduled", len(order_schedule.orders))
-    col4.metric("💰 Quotes Received", len(quotes))
+    col2.metric("🏭 Production Orders", len(internal_schedule.orders))
+    col3.metric("🔩 Materials Forecasted", len(materials_forecast.forecasts))
+    col4.metric("📦 External Orders", len(order_schedule.orders))
+    col5.metric("💰 Quotes Received", len(quotes))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from models.materials_forecast import MaterialsForecast
 from models.supplier_state import SupplierStateStore
 from models.guardrails import GuardrailStore, Guardrail
 from models.order_schedule import OrderSchedule, OrderItem, ProjectedInventoryLevel, OrderStatus
-from models.inventory_data import InventoryData
+from models.inventory_data import InventoryData, ItemType
 
 class BasicOrderScheduler(OrderSchedulerInterface):
     def schedule_orders(self, inventory_data: InventoryData, materials_forecast: MaterialsForecast, supplier_state_store: SupplierStateStore, guardrails: GuardrailStore, num_days: int) -> OrderSchedule:
@@ -28,11 +28,11 @@ class BasicOrderScheduler(OrderSchedulerInterface):
         material_suppliers: dict[str, tuple[str, str]] = {}  # material_id -> (supplier_id, supplier_name)
         
         for item in inventory_data.items:
-            # Check if this item is a material (match by material_id)
-            # We'll match against materials in the forecast
-            material_inventory[item.item_id] = item.quantity
-            if item.supplier_id:
-                material_suppliers[item.item_id] = (item.supplier_id, f"Supplier {item.supplier_id}")
+            # Filter for materials only (exclude products/finished goods)
+            if item.item_type == ItemType.MATERIAL:
+                material_inventory[item.item_id] = item.quantity
+                if item.supplier_id:
+                    material_suppliers[item.item_id] = (item.supplier_id, f"Supplier {item.supplier_id}")
         
         # Guardrails lookup: use items_by_id index
         guardrails_map = guardrails.items_by_id

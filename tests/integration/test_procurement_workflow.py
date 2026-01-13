@@ -24,7 +24,7 @@ from quote_evaluator.basic_quote_evaluator import BasicQuoteEvaluator
 from order_schedule_updater.basic_order_schedule_updater import BasicOrderScheduleUpdater
 from erp_data_fetcher.mock_erp_fetcher import MockERPDataFetcher
 from crm_data_fetcher.mock_crm_fetcher import MockCRMDataFetcher
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, ItemType, InventoryItem
 from models.order_schedule import OrderSchedule
 from models.rfq import RFQStore, RFQStatus
 from models.classification_result import ReplyType
@@ -44,6 +44,7 @@ def _setup_test_data():
             InventoryItem(
                 item_id="MAT-001",
                 item_name="Steel Component",
+                item_type=ItemType.MATERIAL,
                 quantity=5,
                 unit_price=5.0,
                 location="Warehouse-1",
@@ -53,6 +54,7 @@ def _setup_test_data():
             InventoryItem(
                 item_id="MAT-002",
                 item_name="Plastic Housing",
+                item_type=ItemType.MATERIAL,
                 quantity=10,
                 unit_price=3.0,
                 location="Warehouse-1",
@@ -419,6 +421,7 @@ def test_workflow_handles_no_orders():
             InventoryItem(
                 item_id="MAT-001",
                 item_name="Steel Component",
+                item_type=ItemType.MATERIAL,
                 quantity=10000,  # Very high
                 unit_price=5.0,
                 location="Warehouse-1",

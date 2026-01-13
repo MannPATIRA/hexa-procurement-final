@@ -10,7 +10,7 @@ from supplier_state_calculator.basic_supplier_state_calculator import BasicSuppl
 from erp_data_fetcher.mock_erp_fetcher import MockERPDataFetcher
 from crm_data_fetcher.mock_crm_fetcher import MockCRMDataFetcher
 from models.rfq import RFQStore, RFQStatus
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 
 import sys
 import os
@@ -31,6 +31,7 @@ def _generate_test_data():
             InventoryItem(
                 item_id="MAT-001",
                 item_name="Steel Component",
+                item_type=ItemType.MATERIAL,
                 quantity=10,
                 unit_price=5.0,
                 location="Warehouse-1",

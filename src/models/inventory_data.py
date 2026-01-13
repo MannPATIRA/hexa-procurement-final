@@ -2,7 +2,14 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Dict, List, Optional
+
+
+class ItemType(str, Enum):
+    """Type of inventory item."""
+    PRODUCT = "product"
+    MATERIAL = "material"
 
 
 @dataclass(frozen=True)
@@ -11,6 +18,7 @@ class InventoryItem:
 
     item_id: str
     item_name: str
+    item_type: ItemType
     quantity: int
     unit_price: float
     location: str

@@ -20,7 +20,7 @@ import random
 from sales_forecaster.basic_sales_forecaster import BasicSalesForecaster
 from sales_forecaster.advanced_sales_forecaster import AdvancedSalesForecaster
 from sales_forecaster.super_advanced_sales_forecaster import SuperAdvancedSalesForecaster
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 from models.sales_data import SalesData, SalesRecord
 
 
@@ -107,6 +107,7 @@ def create_test_dataset(
         inventory_items.append(InventoryItem(
             item_id=product_id,
             item_name=product_name,
+            item_type=ItemType.PRODUCT,
             quantity=random.randint(10, 200),
             unit_price=config["price"],
             location=f"Warehouse-{(i % 3) + 1}",

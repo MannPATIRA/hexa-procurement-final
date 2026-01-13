@@ -2,11 +2,12 @@
 
 from datetime import datetime, timedelta
 from typing import List
-from models.inventory_data import InventoryItem, InventoryData
+from models.inventory_data import InventoryItem, InventoryData, ItemType
 from models.delivery_history import DeliveryRecord, DeliveryHistory, DeliveryStatus
 from models.sales_data import SalesRecord, SalesData
 from models.bom import BOMItem, BOMData
 from models.blanket_pos import BlanketPO, BlanketPOs, BlanketPOStatus
+from models.product_production import ProductProductionInfo, ProductProductionStore
 
 class MockERP:
     """Mock implementation of ERP system for testing and development.
@@ -18,9 +19,11 @@ class MockERP:
     def __init__(self) -> None:
         """Initialize mock ERP with default test data."""
         self.inventory_items: List[InventoryItem] = [
+            # Product inventory (finished goods)
             InventoryItem(
                 item_id="PROD-001",
                 item_name="Widget A",
+                item_type=ItemType.PRODUCT,
                 quantity=30,  # Lower inventory to trigger scheduled order
                 unit_price=25.50,
                 location="Warehouse-1",
@@ -30,6 +33,7 @@ class MockERP:
             InventoryItem(
                 item_id="PROD-002",
                 item_name="Widget B",
+                item_type=ItemType.PRODUCT,
                 quantity=200,  # Higher inventory - no scheduled order needed
                 unit_price=45.00,
                 location="Warehouse-2",
@@ -39,6 +43,7 @@ class MockERP:
             InventoryItem(
                 item_id="PROD-003",
                 item_name="Widget C",
+                item_type=ItemType.PRODUCT,
                 quantity=3,  # Very low inventory - but has scheduled order today
                 unit_price=75.00,
                 location="Warehouse-3",
@@ -48,11 +53,53 @@ class MockERP:
             InventoryItem(
                 item_id="PROD-004",
                 item_name="Widget D",
+                item_type=ItemType.PRODUCT,
                 quantity=150,  # Above reorder point - use simulate_inventory_drop to trigger breach
                 unit_price=35.00,
                 location="Warehouse-1",
                 last_updated=datetime.now() - timedelta(hours=4),
                 supplier_id="SUP-001",  # Supplied by Acme Corp
+            ),
+            # Material inventory (raw materials/components)
+            InventoryItem(
+                item_id="MAT-001",
+                item_name="Steel Component",
+                item_type=ItemType.MATERIAL,
+                quantity=500,
+                unit_price=5.0,
+                location="Raw Materials Warehouse",
+                last_updated=datetime.now() - timedelta(hours=12),
+                supplier_id="SUP-001",
+            ),
+            InventoryItem(
+                item_id="MAT-002",
+                item_name="Plastic Housing",
+                item_type=ItemType.MATERIAL,
+                quantity=200,
+                unit_price=3.0,
+                location="Raw Materials Warehouse",
+                last_updated=datetime.now() - timedelta(hours=8),
+                supplier_id="SUP-002",
+            ),
+            InventoryItem(
+                item_id="MAT-003",
+                item_name="Electronic Circuit Board",
+                item_type=ItemType.MATERIAL,
+                quantity=150,
+                unit_price=12.0,
+                location="Raw Materials Warehouse",
+                last_updated=datetime.now() - timedelta(hours=6),
+                supplier_id="SUP-003",
+            ),
+            InventoryItem(
+                item_id="MAT-004",
+                item_name="Rubber Gasket",
+                item_type=ItemType.MATERIAL,
+                quantity=100,
+                unit_price=2.5,
+                location="Raw Materials Warehouse",
+                last_updated=datetime.now() - timedelta(hours=4),
+                supplier_id="SUP-001",
             ),
         ]
 
@@ -421,4 +468,36 @@ class MockERP:
         self.blanket_pos_data = BlanketPOs(
             blanket_pos=self.blanket_pos,
             fetched_at=datetime.now(),
+        )
+
+        # Product production information
+        self.product_production_info: List[ProductProductionInfo] = [
+            ProductProductionInfo(
+                product_id="PROD-001",
+                production_lead_time_days=2,
+                production_rate_per_day=50,  # Can produce 50 units per day
+                setup_time_hours=2.0,
+            ),
+            ProductProductionInfo(
+                product_id="PROD-002",
+                production_lead_time_days=3,
+                production_rate_per_day=40,
+                setup_time_hours=3.0,
+            ),
+            ProductProductionInfo(
+                product_id="PROD-003",
+                production_lead_time_days=4,
+                production_rate_per_day=30,
+                setup_time_hours=4.0,
+            ),
+            ProductProductionInfo(
+                product_id="PROD-004",
+                production_lead_time_days=2,
+                production_rate_per_day=60,
+                setup_time_hours=1.5,
+            ),
+        ]
+
+        self.product_production_store = ProductProductionStore(
+            items=self.product_production_info,
         )

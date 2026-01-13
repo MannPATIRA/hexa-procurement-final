@@ -14,7 +14,7 @@ from basic_guardrail_calculator import BasicGuardrailCalculator  # type: ignore
 from erp_data_fetcher.mock_erp_fetcher import MockERPDataFetcher
 from crm_data_fetcher.mock_crm_fetcher import MockCRMDataFetcher
 from models.order_schedule import OrderSchedule, OrderStatus
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 
 
 def test_schedule_orders_returns_order_schedule():
@@ -133,6 +133,7 @@ def test_schedule_orders_schedules_when_below_reorder_point():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=10,  # Low inventory
             unit_price=5.0,
             location="Warehouse-1",
@@ -182,6 +183,7 @@ def test_schedule_orders_uses_eoq_for_quantity():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=5,  # Very low inventory
             unit_price=5.0,
             location="Warehouse-1",
@@ -229,6 +231,7 @@ def test_schedule_orders_has_correct_supplier_info():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=5,
             unit_price=5.0,
             location="Warehouse-1",
@@ -277,6 +280,7 @@ def test_schedule_orders_calculates_delivery_dates():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=5,
             unit_price=5.0,
             location="Warehouse-1",
@@ -325,6 +329,7 @@ def test_schedule_orders_projects_inventory_decreases():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=100,  # High initial inventory
             unit_price=5.0,
             location="Warehouse-1",
@@ -380,6 +385,7 @@ def test_schedule_orders_projects_inventory_increases_on_delivery():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=10,  # Low inventory to trigger order
             unit_price=5.0,
             location="Warehouse-1",
@@ -440,6 +446,7 @@ def test_schedule_orders_sets_flags_correctly():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=5,  # Low inventory
             unit_price=5.0,
             location="Warehouse-1",
@@ -523,6 +530,7 @@ def test_schedule_orders_handles_high_inventory():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=10000,  # Very high inventory
             unit_price=5.0,
             location="Warehouse-1",
@@ -569,6 +577,7 @@ def test_schedule_orders_handles_multiple_materials():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=10,
             unit_price=5.0,
             location="Warehouse-1",
@@ -578,6 +587,7 @@ def test_schedule_orders_handles_multiple_materials():
         InventoryItem(
             item_id="MAT-002",
             item_name="Plastic Housing",
+            item_type=ItemType.MATERIAL,
             quantity=15,
             unit_price=3.0,
             location="Warehouse-1",
@@ -624,6 +634,7 @@ def test_schedule_orders_uses_default_supplier_when_missing():
         InventoryItem(
             item_id="MAT-001",
             item_name="Steel Component",
+            item_type=ItemType.MATERIAL,
             quantity=5,
             unit_price=5.0,
             location="Warehouse-1",

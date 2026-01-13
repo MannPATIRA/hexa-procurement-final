@@ -27,7 +27,7 @@ sys.path.insert(0, str(src_path))
 from sales_forecaster.basic_sales_forecaster import BasicSalesForecaster
 from sales_forecaster.advanced_sales_forecaster import AdvancedSalesForecaster
 from sales_forecaster.super_advanced_sales_forecaster import SuperAdvancedSalesForecaster
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 from models.sales_data import SalesData, SalesRecord
 
 LOG_PATH = "/Users/ishaanmakkar/Documents/hexa-procurement-final/.cursor/debug.log"
@@ -101,6 +101,7 @@ def generate_product_data(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -154,6 +155,7 @@ def generate_exponential_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -206,6 +208,7 @@ def generate_step_change_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -255,6 +258,7 @@ def generate_cyclical_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -303,6 +307,7 @@ def generate_random_walk_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -354,6 +359,7 @@ def generate_outlier_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -405,6 +411,7 @@ def generate_bimodal_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -461,6 +468,7 @@ def generate_burst_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",
@@ -509,6 +517,7 @@ def generate_linear_ramp_sales(
     inventory_item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=random.randint(50, 500),
         unit_price=unit_price,
         location=f"Warehouse-{random.randint(1, 5)}",

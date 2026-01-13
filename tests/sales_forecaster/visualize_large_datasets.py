@@ -19,7 +19,7 @@ sys.path.insert(0, str(src_path))
 from sales_forecaster.basic_sales_forecaster import BasicSalesForecaster
 from sales_forecaster.advanced_sales_forecaster import AdvancedSalesForecaster
 from sales_forecaster.super_advanced_sales_forecaster import SuperAdvancedSalesForecaster
-from models.inventory_data import InventoryData, InventoryItem
+from models.inventory_data import InventoryData, InventoryItem, ItemType
 from models.sales_data import SalesData, SalesRecord
 
 
@@ -228,6 +228,7 @@ def generate_large_dataset(
     item = InventoryItem(
         item_id=product_id,
         item_name=product_name,
+        item_type=ItemType.PRODUCT,
         quantity=100,
         unit_price=unit_price,
         location="WAREHOUSE-01",
